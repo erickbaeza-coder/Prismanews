@@ -855,25 +855,17 @@ function renderPreview() {
     document.getElementById('prev-subtitulo').after(appVerEl);
   }
   if (!isMailing) {
-    appVerEl.innerHTML = [
-      '<span class="av-label">APP VERSION</span>',
-      '<span class="av-ver">' + state.appVersion + '</span>',
-      '<span class="av-store-badge" title="App Store" style="display:inline-flex;align-items:center;width:22px;height:22px">',
-        '<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">',
-          '<rect width="24" height="24" rx="5" fill="#1A82F7"/>',
-          '<path fill="white" d="M11.9 5.5l.5-.8c.3-.5 1-.7 1.5-.4s.7 1 .4 1.5L9.6 13.9h3.4c1.1 0 1.7 1.3 1.2 2.2H4.3c-.6 0-1.1-.5-1.1-1.1s.5-1.1 1.1-1.1h2.8L10.6 7.7 9.5 5.8c-.3-.5-.1-1.2.4-1.5s1.1-.1 1.4.4l.5.8zM7.7 17.2l-1 1.8c-.3.5-1 .7-1.5.4s-.7-1-.4-1.5l.8-1.4c.9-.3 1.6-.1 2.1.7zm9-3.3h2.8c.6 0 1.1.5 1.1 1.1s-.5 1.1-1.1 1.1h-1.6l1.1 1.8c.3.5.1 1.2-.4 1.5s-1.1.1-1.4-.4C15.4 15.9 14 13.6 13.1 12c-.9-1.6-.3-3.2.4-3.7.7 1.2 1.8 3.1 3.2 5.6z"/>',
-        '</svg>',
-      '</span>',
-      '<span class="av-store-badge" title="Play Store" style="display:inline-flex;align-items:center;width:22px;height:22px">',
-        '<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">',
-          '<path d="M11.3 11.5L1.2 22c.1.4.3.8.6 1.1.3.3.6.5 1 .7.4.1.8.2 1.2.2.4 0 .8-.1 1.2-.4L16.5 17.2 11.3 11.5z" fill="#EA4335"/>',
-          '<path d="M21.5 9.7L16.6 6.9 11 11.7l5.6 5.5 4.8-2.8c.4-.2.8-.6 1-.9.3-.4.4-.9.4-1.4s-.1-1-.4-1.4c-.2-.4-.5-.7-.9-.9z" fill="#FBBC04"/>',
-          '<path d="M1.2 2C1.1 2.2 1.1 2.5 1.1 2.7v18.6c0 .2 0 .5.1.7L11.6 11.7 1.2 2z" fill="#4285F4"/>',
-          '<path d="M11.4 12L16.6 6.9 5.3.4C4.8.1 4.3 0 3.8 0c-.6 0-1.2.2-1.6.6C1.7.9 1.4 1.4 1.2 2L11.4 12z" fill="#34A853"/>',
-        '</svg>',
-      '</span>'
-    ].join('');
+    const _ver = state.appVersion || '–';
+    const _appSVG = '<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#1A82F7"/><path fill="white" d="M11.9 5.5l.5-.8c.3-.5 1-.7 1.5-.4.5.3.7 1 .4 1.5L9.6 13.9h3.4c1.1 0 1.7 1.3 1.2 2.2H4.3c-.6 0-1.1-.5-1.1-1.1s.5-1.1 1.1-1.1h2.8L10.6 7.7 9.5 5.8c-.3-.5-.1-1.2.4-1.5.5-.3 1.1-.1 1.4.4l.5.8zM7.7 17.2l-1 1.8c-.3.5-1 .7-1.5.4s-.7-1-.4-1.5l.8-1.4c.9-.3 1.6-.1 2.1.7zm9-3.3h2.8c.6 0 1.1.5 1.1 1.1s-.5 1.1-1.1 1.1h-1.6l1.1 1.8c.3.5.1 1.2-.4 1.5s-1.1.1-1.4-.4C15.4 15.9 14 13.6 13.1 12c-.9-1.6-.3-3.2.4-3.7.7 1.2 1.8 3.1 3.2 5.6z"/></svg>';
+    const _playSVG = '<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.3 11.5L1.2 22c.1.4.3.8.6 1.1.3.3.6.5 1 .7.4.1.8.2 1.2.2.4 0 .8-.1 1.2-.4L16.5 17.2 11.3 11.5z" fill="#EA4335"/><path d="M21.5 9.7L16.6 6.9 11 11.7l5.6 5.5 4.8-2.8c.4-.2.8-.6 1-.9.3-.4.4-.9.4-1.4s-.1-1-.4-1.4c-.2-.4-.5-.7-.9-.9z" fill="#FBBC04"/><path d="M1.2 2C1.1 2.2 1.1 2.5 1.1 2.7v18.6c0 .2 0 .5.1.7L11.6 11.7 1.2 2z" fill="#4285F4"/><path d="M11.4 12L16.6 6.9 5.3.4C4.8.1 4.3 0 3.8 0c-.6 0-1.2.2-1.6.6C1.7.9 1.4 1.4 1.2 2L11.4 12z" fill="#34A853"/></svg>';
+    appVerEl.textContent = '';
+    const _lbl = document.createElement('span'); _lbl.className = 'av-label'; _lbl.textContent = 'APP VERSION'; appVerEl.appendChild(_lbl);
+    const _v = document.createElement('span'); _v.className = 'av-ver'; _v.textContent = _ver; appVerEl.appendChild(_v);
+    const _a = document.createElement('span'); _a.className = 'av-store-badge'; _a.style.cssText = 'display:inline-flex;align-items:center;width:22px;height:22px'; _a.innerHTML = _appSVG; appVerEl.appendChild(_a);
+    const _p = document.createElement('span'); _p.className = 'av-store-badge'; _p.style.cssText = 'display:inline-flex;align-items:center;width:22px;height:22px'; _p.innerHTML = _playSVG; appVerEl.appendChild(_p);
     appVerEl.style.display = '';
+  } else {
+    appVerEl.style.display = 'none';
   } else {
     appVerEl.style.display = 'none';
   }
