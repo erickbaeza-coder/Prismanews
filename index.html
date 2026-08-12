@@ -855,49 +855,24 @@ function renderPreview() {
     document.getElementById('prev-subtitulo').after(appVerEl);
   }
   if (!isMailing) {
-    // Build APP VERSION pill via DOM (avoids innerHTML truncation of long data URIs)
-    appVerEl.innerHTML = '';
-    const lblSpan = document.createElement('span');
-    lblSpan.className = 'av-label';
-    lblSpan.textContent = 'APP VERSION';
-    const verSpan = document.createElement('span');
-    verSpan.className = 'av-ver';
-    verSpan.textContent = state.appVersion;
-    // Build SVG icons via createElementNS (avoids innerHTML/CSP issues on file://)
-    function makeSVGicon(type) {
-      const ns = 'http://www.w3.org/2000/svg';
-      const svg = document.createElementNS(ns, 'svg');
-      svg.setAttribute('width', '22'); svg.setAttribute('height', '22');
-      svg.setAttribute('viewBox', '0 0 24 24');
-      svg.style.cssText = 'display:block;flex-shrink:0';
-      if (type === 'apple') {
-        const r = document.createElementNS(ns, 'rect');
-        r.setAttribute('width','24');r.setAttribute('height','24');r.setAttribute('rx','5');r.setAttribute('fill','#1A82F7');
-        svg.appendChild(r);
-        const p = document.createElementNS(ns, 'path');
-        p.setAttribute('fill','white');
-        p.setAttribute('d','M11.898 5.514L12.384 4.674C12.684 4.149 13.353 3.972 13.878 4.272C14.403 4.572 14.58 5.241 14.28 5.766L9.597 13.872H12.984C14.082 13.872 14.697 15.162 14.22 16.056H4.29C3.684 16.056 3.198 15.57 3.198 14.964C3.198 14.358 3.684 13.872 4.29 13.872H7.074L10.638 7.695L9.525 5.763C9.225 5.238 9.402 4.575 9.927 4.269C10.452 3.969 11.115 4.146 11.421 4.671L11.898 5.514ZM7.686 17.181L6.636 19.002C6.336 19.527 5.667 19.704 5.142 19.404C4.617 19.104 4.44 18.435 4.74 17.91L5.52 16.56C6.402 16.287 7.119 16.497 7.686 17.181ZM16.728 13.878H19.569C20.175 13.878 20.661 14.364 20.661 14.97C20.661 15.576 20.175 16.062 19.569 16.062H17.991L19.056 17.91C19.356 18.435 19.179 19.098 18.654 19.404C18.129 19.704 17.466 19.527 17.16 19.002C15.366 15.891 14.019 13.563 13.125 12.012C12.21 10.434 12.864 8.85 13.509 8.313C14.226 9.543 15.297 11.4 16.728 13.878Z');
-        svg.appendChild(p);
-      } else {
-        const paths = [
-          ['M11.28 11.46L1.21 22.01C1.33 22.41 1.53 22.78 1.81 23.09C2.09 23.40 2.43 23.64 2.82 23.80C3.20 23.96 3.62 24.02 4.03 23.99C4.45 23.96 4.85 23.84 5.21 23.63L16.54 17.18L11.28 11.46Z','#EA4335'],
-          ['M21.46 9.67L16.56 6.86L11.05 11.70L16.59 17.16L21.45 14.39C21.88 14.16 22.24 13.82 22.49 13.41C22.74 12.99 22.88 12.52 22.88 12.03C22.88 11.54 22.74 11.07 22.49 10.65C22.24 10.23 21.88 9.90 21.45 9.67H21.46Z','#FBBC04'],
-          ['M1.21 2.00C1.15 2.22 1.12 2.45 1.12 2.69V21.32C1.13 21.55 1.16 21.79 1.21 22.01L11.63 11.73L1.21 2.00Z','#4285F4'],
-          ['M11.36 12.00L16.56 6.86L5.25 0.38C4.83 0.13 4.34 0.00 3.85 0.00C3.25 0.00 2.67 0.19 2.20 0.55C1.72 0.91 1.38 1.41 1.21 1.99L11.36 12.00Z','#34A853']
-        ];
-        paths.forEach(([d, fill]) => {
-          const p = document.createElementNS(ns, 'path');
-          p.setAttribute('d', d);
-          p.setAttribute('fill', fill);
-          svg.appendChild(p);
-        });
-      }
-      return svg;
-    }
-    appVerEl.appendChild(lblSpan);
-    appVerEl.appendChild(verSpan);
-    appVerEl.appendChild(makeSVGicon('apple'));
-    appVerEl.appendChild(makeSVGicon('play'));
+    appVerEl.innerHTML = [
+      '<span class="av-label">APP VERSION</span>',
+      '<span class="av-ver">' + state.appVersion + '</span>',
+      '<span class="av-store-badge" title="App Store" style="display:inline-flex;align-items:center;width:22px;height:22px">',
+        '<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">',
+          '<rect width="24" height="24" rx="5" fill="#1A82F7"/>',
+          '<path fill="white" d="M11.9 5.5l.5-.8c.3-.5 1-.7 1.5-.4s.7 1 .4 1.5L9.6 13.9h3.4c1.1 0 1.7 1.3 1.2 2.2H4.3c-.6 0-1.1-.5-1.1-1.1s.5-1.1 1.1-1.1h2.8L10.6 7.7 9.5 5.8c-.3-.5-.1-1.2.4-1.5s1.1-.1 1.4.4l.5.8zM7.7 17.2l-1 1.8c-.3.5-1 .7-1.5.4s-.7-1-.4-1.5l.8-1.4c.9-.3 1.6-.1 2.1.7zm9-3.3h2.8c.6 0 1.1.5 1.1 1.1s-.5 1.1-1.1 1.1h-1.6l1.1 1.8c.3.5.1 1.2-.4 1.5s-1.1.1-1.4-.4C15.4 15.9 14 13.6 13.1 12c-.9-1.6-.3-3.2.4-3.7.7 1.2 1.8 3.1 3.2 5.6z"/>',
+        '</svg>',
+      '</span>',
+      '<span class="av-store-badge" title="Play Store" style="display:inline-flex;align-items:center;width:22px;height:22px">',
+        '<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">',
+          '<path d="M11.3 11.5L1.2 22c.1.4.3.8.6 1.1.3.3.6.5 1 .7.4.1.8.2 1.2.2.4 0 .8-.1 1.2-.4L16.5 17.2 11.3 11.5z" fill="#EA4335"/>',
+          '<path d="M21.5 9.7L16.6 6.9 11 11.7l5.6 5.5 4.8-2.8c.4-.2.8-.6 1-.9.3-.4.4-.9.4-1.4s-.1-1-.4-1.4c-.2-.4-.5-.7-.9-.9z" fill="#FBBC04"/>',
+          '<path d="M1.2 2C1.1 2.2 1.1 2.5 1.1 2.7v18.6c0 .2 0 .5.1.7L11.6 11.7 1.2 2z" fill="#4285F4"/>',
+          '<path d="M11.4 12L16.6 6.9 5.3.4C4.8.1 4.3 0 3.8 0c-.6 0-1.2.2-1.6.6C1.7.9 1.4 1.4 1.2 2L11.4 12z" fill="#34A853"/>',
+        '</svg>',
+      '</span>'
+    ].join('');
     appVerEl.style.display = '';
   } else {
     appVerEl.style.display = 'none';
