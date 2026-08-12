@@ -253,6 +253,27 @@ textarea{resize:vertical;min-height:58px;line-height:1.5}
 .wa-bullets li{font-size:13px;color:#000000 !important;line-height:1.65;padding-left:18px;position:relative;margin-bottom:6px}
 .wa-bullets li::before{content:"•";position:absolute;left:0;top:2px;color:#E91E8C;font-weight:700;font-size:14px}
 .wa-bullets li strong{font-weight:700}
+
+/* ── MULTI-MOCKUP LAYOUTS ── */
+.layout-selector{display:flex;gap:6px;margin-bottom:12px}
+.layout-opt{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;transition:all .15s}
+.layout-opt:hover{border-color:#1B4FCC;color:#1B4FCC}
+.layout-opt.active{border-color:#1B4FCC;background:#1B4FCC10;color:#1B4FCC}
+.layout-opt .lo-icons{font-size:14px;letter-spacing:-2px}
+.block-add-btn{width:100%;padding:10px;background:#f8f9fa;border:1.5px dashed #d1d5db;border-radius:10px;color:#6b7280;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;margin-top:4px}
+.block-add-btn:hover{border-color:#1B4FCC;color:#1B4FCC;background:#1B4FCC08}
+.block-remove-btn{font-size:10px;font-weight:600;color:#ef4444;background:none;border:none;cursor:pointer;padding:0;margin-left:auto}
+.sec-title-row{display:flex;align-items:center;width:100%;margin-bottom:10px}
+/* 2-up layout */
+.nl-block-2up{border-radius:20px;overflow:hidden;background:#fff;padding:28px 32px}
+.nl-block-2up .nb2-text{margin-bottom:20px}
+.nl-block-2up .nb2-phones{display:flex;gap:16px;justify-content:center}
+.nl-block-2up .nb2-phones .phone-mockup{width:130px;height:280px}
+/* 3-up layout */
+.nl-block-3up{border-radius:20px;overflow:hidden;background:#fff;padding:28px 32px}
+.nl-block-3up .nb3-text{margin-bottom:20px;text-align:center}
+.nl-block-3up .nb3-phones{display:flex;gap:12px;justify-content:center}
+.nl-block-3up .nb3-phones .phone-mockup{width:100px;height:216px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -332,6 +353,9 @@ textarea{resize:vertical;min-height:58px;line-height:1.5}
 
     <!-- 5. BLOCKS (dynamic) -->
     <div id="blocks-form"></div>
+  <div style="padding:8px 18px 4px" id="add-block-area">
+    <button class="block-add-btn" onclick="addFuncBlock()" id="btn-add-block">＋ Agregar funcionalidad</button>
+  </div>
 
   </div><!-- /form-body -->
 
@@ -567,7 +591,7 @@ function makeTmplThumb(blocks) {
 
 // Default block states per type
 function defaultBlock(type, idx) {
-  if (type === 'std') return {type:'std', label:'Highlights', color:'#E53935', titulo:'', subtitulo:'', desc:'', img:null, waPills:[{pill:'',text:''},{pill:'',text:''}], waBullets:''};
+  if (type === 'std') return {type:'std', label:'Highlights', color:'#E53935', titulo:'', subtitulo:'', desc:'', img:null, img2:null, img3:null, mockupLayout:1, waPills:[{pill:'',text:''},{pill:'',text:''}], waBullets:''};
   if (type === 'gal2') return {type:'gal2', imgs:[null,null], tags:['','']};
   if (type === 'gal3') return {type:'gal3', label:'Nueva función', color:'#7C3AED', titulo:'', subtitulo:'', desc:'', imgs:[null,null,null], tags:['','','']};
 }
@@ -607,6 +631,8 @@ function handleImg(blockIdx, imgIdx, input) {
   const r = new FileReader();
   r.onload = e => {
     if (imgIdx === null) state.blocks[blockIdx].img = e.target.result;
+    else if (imgIdx === 'img2') state.blocks[blockIdx].img2 = e.target.result;
+    else if (imgIdx === 'img3') state.blocks[blockIdx].img3 = e.target.result;
     else state.blocks[blockIdx].imgs[imgIdx] = e.target.result;
     renderBlockForms(); renderPreview();
   };
@@ -614,7 +640,22 @@ function handleImg(blockIdx, imgIdx, input) {
 }
 function removeImg(blockIdx, imgIdx) {
   if (imgIdx === null) state.blocks[blockIdx].img = null;
+  else if (imgIdx === 'img2') state.blocks[blockIdx].img2 = null;
+  else if (imgIdx === 'img3') state.blocks[blockIdx].img3 = null;
   else state.blocks[blockIdx].imgs[imgIdx] = null;
+  renderBlockForms(); renderPreview();
+}
+function addFuncBlock() {
+  if (state.blocks.filter(b => b.type === 'std').length >= 3) return;
+  state.blocks.push(defaultBlock('std', state.blocks.length));
+  renderBlockForms(); renderPreview();
+}
+function removeFuncBlock(i) {
+  state.blocks.splice(i, 1);
+  renderBlockForms(); renderPreview();
+}
+function setMockupLayout(i, n) {
+  state.blocks[i].mockupLayout = n;
   renderBlockForms(); renderPreview();
 }
 
@@ -658,7 +699,8 @@ function renderBlockForms() {
     if (d.type === 'std') {
       const t = TRANSLATIONS[state.idioma]||TRANSLATIONS.es;
       const isWA = state.formatId === 'whatsapp';
-      inner += `${t.funcBlock} ${i+1}</div>
+      const stdTotal = state.blocks.filter(b=>b.type==='std').length;
+      inner += `<div class="sec-title-row" style="display:flex;align-items:center;margin-bottom:10px"><span style="color:${color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${t.funcBlock} ${i+1}</span>${stdTotal>1?`<button style="font-size:10px;font-weight:600;color:#ef4444;background:none;border:none;cursor:pointer;margin-left:auto" onclick="removeFuncBlock(${i})">✕ Eliminar</button>`:''}</div>
         <div class="block-card">
           <div class="field"><label>${t.catLabel}${isWA?' <span style="font-weight:400;opacity:.6">(opcional)</span>':''}</label>
             <div class="label-opts">
@@ -679,13 +721,43 @@ function renderBlockForms() {
           <div class="field"><label>${t.descLabel}</label>
             <textarea placeholder="${t.descPh}"
               oninput="state.blocks[${i}].desc=this.value;renderPreview()">${esc(d.desc)}</textarea></div>
-          <div class="field"><label>${t.imgLabel}</label>
+          <div class="field">
+            <label>Diagramación</label>
+            <div class="layout-selector">
+              <div class="layout-opt${d.mockupLayout===1?' active':''}" onclick="setMockupLayout(${i},1)">
+                <span class="lo-icons">📱</span>1 pantalla
+              </div>
+              <div class="layout-opt${d.mockupLayout===2?' active':''}" onclick="setMockupLayout(${i},2)">
+                <span class="lo-icons">📱📱</span>2 pantallas
+              </div>
+              <div class="layout-opt${d.mockupLayout===3?' active':''}" onclick="setMockupLayout(${i},3)">
+                <span class="lo-icons">📱📱📱</span>3 pantallas
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>${t.imgLabel}${d.mockupLayout>1?' 1':''}</label>
             <div class="img-area">
               <input type="file" accept="image/*" onchange="handleImg(${i},null,this)">
               ${d.img?`<img src="${d.img}" class="img-preview" style="display:block">`:`<div class="upload-icon">📱</div><div class="upload-txt"><strong>${t.uploadBtn}</strong><br>PNG, JPG</div>`}
             </div>
             ${d.img?`<button class="rm-btn" onclick="removeImg(${i},null)">${t.rmBtn}</button>`:''}
           </div>
+          ${d.mockupLayout>=2?`
+          <div class="field"><label>${t.imgLabel} 2</label>
+            <div class="img-area">
+              <input type="file" accept="image/*" onchange="handleImg(${i},'img2',this)">
+              ${d.img2?`<img src="${d.img2}" class="img-preview" style="display:block">`:`<div class="upload-icon">📱</div><div class="upload-txt"><strong>${t.uploadBtn}</strong><br>PNG, JPG</div>`}
+            </div>
+            ${d.img2?`<button class="rm-btn" onclick="removeImg(${i},'img2')">${t.rmBtn}</button>`:''}
+          </div>`:''}
+          ${d.mockupLayout>=3?`
+          <div class="field"><label>${t.imgLabel} 3</label>
+            <div class="img-area">
+              <input type="file" accept="image/*" onchange="handleImg(${i},'img3',this)">
+              ${d.img3?`<img src="${d.img3}" class="img-preview" style="display:block">`:`<div class="upload-icon">📱</div><div class="upload-txt"><strong>${t.uploadBtn}</strong><br>PNG, JPG</div>`}
+            </div>
+            ${d.img3?`<button class="rm-btn" onclick="removeImg(${i},'img3')">${t.rmBtn}</button>`:''}
+          </div>`:''}
           ${isWA?`
           <hr style="border:none;border-top:1px solid #f0f0f0;margin:10px 0">
           <div style="font-size:10px;font-weight:700;color:#E91E8C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">WhatsApp</div>
@@ -772,6 +844,13 @@ function renderBlockForms() {
     card.innerHTML = inner;
     c.appendChild(card);
   });
+  // Show/hide add-block button based on std count
+  const addBtn = document.getElementById('btn-add-block');
+  if (addBtn) {
+    const stdCount2 = state.blocks.filter(b=>b.type==='std').length;
+    addBtn.style.display = stdCount2 >= 3 ? 'none' : '';
+    addBtn.textContent = stdCount2 === 0 ? '＋ Agregar funcionalidad' : `＋ Agregar funcionalidad (${stdCount2}/3)`;
+  }
 }
 
 // ─── Render preview ───
@@ -950,10 +1029,44 @@ function renderPreview() {
           <div class="nl-block-subtitle">${d.subtitulo||`<span class="ph">Subtítulo</span>`}</div>
           <div class="nl-block-desc">${d.desc||`<span class="ph">Descripción de la funcionalidad...</span>`}</div>`;
       }
-      el.innerHTML = `
-        <div class="nl-block-text">${textContent}</div>
-        <div class="nl-block-img"><div class="phone-mockup">${screen}</div></div>`;
-      bEl.appendChild(el);
+      const layout = d.mockupLayout || 1;
+
+      if (layout === 1) {
+        el.innerHTML = `
+          <div class="nl-block-text">${textContent}</div>
+          <div class="nl-block-img"><div class="phone-mockup">${screen}</div></div>`;
+        bEl.appendChild(el);
+
+      } else if (layout === 2) {
+        el.className = 'nl-block-2up';
+        const screen2 = d.img2
+          ? `<img src="${d.img2}" class="phone-screen">`
+          : `<div class="phone-ph"><div class="phone-ph-icon">📱</div><div class="phone-ph-txt">Sube mockup 2</div></div>`;
+        el.innerHTML = `
+          <div class="nb2-text">${textContent}</div>
+          <div class="nb2-phones">
+            <div class="phone-mockup">${screen}</div>
+            <div class="phone-mockup">${screen2}</div>
+          </div>`;
+        bEl.appendChild(el);
+
+      } else if (layout === 3) {
+        el.className = 'nl-block-3up';
+        const screen2 = d.img2
+          ? `<img src="${d.img2}" class="phone-screen">`
+          : `<div class="phone-ph"><div class="phone-ph-icon">📱</div><div class="phone-ph-txt">Sube mockup 2</div></div>`;
+        const screen3 = d.img3
+          ? `<img src="${d.img3}" class="phone-screen">`
+          : `<div class="phone-ph"><div class="phone-ph-icon">📱</div><div class="phone-ph-txt">Sube mockup 3</div></div>`;
+        el.innerHTML = `
+          <div class="nb3-text">${textContent}</div>
+          <div class="nb3-phones">
+            <div class="phone-mockup">${screen}</div>
+            <div class="phone-mockup">${screen2}</div>
+            <div class="phone-mockup">${screen3}</div>
+          </div>`;
+        bEl.appendChild(el);
+      }
 
     } else if (d.type === 'gal2') {
       const el = document.createElement('div');
