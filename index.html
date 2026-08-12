@@ -357,6 +357,12 @@ textarea{resize:vertical;min-height:58px;line-height:1.5}
         <div class="nl-eyebrow" id="prev-eyebrow" style="display:none"></div>
         <div class="nl-main-title" id="prev-titulo">Traemos buenas noticias</div>
         <div class="nl-intro" id="prev-subtitulo"><span class="ph">Agrega un subtítulo introductorio...</span></div>
+      <div id="prev-app-version" class="nl-app-version" style="display:none">
+        <span class="av-label">APP VERSION</span>
+        <span class="av-ver" id="prev-av-ver">2.5.0</span>
+        <img id="prev-av-badge-app" width="22" height="22" style="display:inline-block;vertical-align:middle">
+        <img id="prev-av-badge-play" width="22" height="22" style="display:inline-block;vertical-align:middle">
+      </div>
       </div>
     </div>
     <!-- Separator bar -->
@@ -847,22 +853,12 @@ function renderPreview() {
   }
 
   // APP VERSION pill (whatsapp only)
-  let appVerEl = document.getElementById('prev-app-version');
-  if (!appVerEl) {
-    appVerEl = document.createElement('div');
-    appVerEl.id = 'prev-app-version';
-    appVerEl.className = 'nl-app-version';
-    document.getElementById('prev-subtitulo').after(appVerEl);
-  }
+  // APP VERSION pill — static in HTML, just update content + visibility
+  const appVerEl = document.getElementById('prev-app-version');
   if (!isMailing) {
-    const _ver = state.appVersion || '–';
-    const _appSVG = '<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#1A82F7"/><path fill="white" d="M11.9 5.5l.5-.8c.3-.5 1-.7 1.5-.4.5.3.7 1 .4 1.5L9.6 13.9h3.4c1.1 0 1.7 1.3 1.2 2.2H4.3c-.6 0-1.1-.5-1.1-1.1s.5-1.1 1.1-1.1h2.8L10.6 7.7 9.5 5.8c-.3-.5-.1-1.2.4-1.5.5-.3 1.1-.1 1.4.4l.5.8zM7.7 17.2l-1 1.8c-.3.5-1 .7-1.5.4s-.7-1-.4-1.5l.8-1.4c.9-.3 1.6-.1 2.1.7zm9-3.3h2.8c.6 0 1.1.5 1.1 1.1s-.5 1.1-1.1 1.1h-1.6l1.1 1.8c.3.5.1 1.2-.4 1.5s-1.1.1-1.4-.4C15.4 15.9 14 13.6 13.1 12c-.9-1.6-.3-3.2.4-3.7.7 1.2 1.8 3.1 3.2 5.6z"/></svg>';
-    const _playSVG = '<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.3 11.5L1.2 22c.1.4.3.8.6 1.1.3.3.6.5 1 .7.4.1.8.2 1.2.2.4 0 .8-.1 1.2-.4L16.5 17.2 11.3 11.5z" fill="#EA4335"/><path d="M21.5 9.7L16.6 6.9 11 11.7l5.6 5.5 4.8-2.8c.4-.2.8-.6 1-.9.3-.4.4-.9.4-1.4s-.1-1-.4-1.4c-.2-.4-.5-.7-.9-.9z" fill="#FBBC04"/><path d="M1.2 2C1.1 2.2 1.1 2.5 1.1 2.7v18.6c0 .2 0 .5.1.7L11.6 11.7 1.2 2z" fill="#4285F4"/><path d="M11.4 12L16.6 6.9 5.3.4C4.8.1 4.3 0 3.8 0c-.6 0-1.2.2-1.6.6C1.7.9 1.4 1.4 1.2 2L11.4 12z" fill="#34A853"/></svg>';
-    appVerEl.textContent = '';
-    const _lbl = document.createElement('span'); _lbl.className = 'av-label'; _lbl.textContent = 'APP VERSION'; appVerEl.appendChild(_lbl);
-    const _v = document.createElement('span'); _v.className = 'av-ver'; _v.textContent = _ver; appVerEl.appendChild(_v);
-    const _a = document.createElement('span'); _a.className = 'av-store-badge'; _a.style.cssText = 'display:inline-flex;align-items:center;width:22px;height:22px'; _a.innerHTML = _appSVG; appVerEl.appendChild(_a);
-    const _p = document.createElement('span'); _p.className = 'av-store-badge'; _p.style.cssText = 'display:inline-flex;align-items:center;width:22px;height:22px'; _p.innerHTML = _playSVG; appVerEl.appendChild(_p);
+    document.getElementById('prev-av-ver').textContent = state.appVersion || '2.5.0';
+    document.getElementById('prev-av-badge-app').src  = STORE_BADGES.appStore;
+    document.getElementById('prev-av-badge-play').src = STORE_BADGES.playStore;
     appVerEl.style.display = '';
   } else {
     appVerEl.style.display = 'none';
@@ -1010,8 +1006,7 @@ async function captureNewsletter(scale) {
   const el = document.getElementById('newsletter');
   const fullHeight = el.scrollHeight || el.offsetHeight;
   const fullWidth  = el.scrollWidth  || el.offsetWidth;
-
-  const canvas = await html2canvas(el, {
+  return html2canvas(el, {
     scale: sc,
     useCORS: true,
     allowTaint: true,
@@ -1024,80 +1019,6 @@ async function captureNewsletter(scale) {
     scrollX: 0,
     scrollY: -window.scrollY,
   });
-
-  // Post-process: draw APP VERSION pill content directly on canvas
-  // (html2canvas captures the pill border/bg but not dynamic children)
-  const pill = document.getElementById('prev-app-version');
-  if (pill && state.formatId !== 'mailing') {
-    const ctx = canvas.getContext('2d');
-    // Use offsetTop chain to get position relative to newsletter — avoids viewport scroll errors
-    let ox = 0, oy = 0, cur = pill;
-    while (cur && cur !== el) { ox += cur.offsetLeft; oy += cur.offsetTop; cur = cur.offsetParent; }
-    const px = ox * sc;
-    const py = oy * sc;
-    const pw = pill.offsetWidth  * sc;
-    const ph = pill.offsetHeight * sc;
-
-    // Clear pill interior (keep border — just repaint the fill)
-    ctx.fillStyle = '#ffffff';
-    const border = 1.5 * sc;
-    ctx.fillRect(px + border, py + border, pw - border*2, ph - border*2);
-
-    // Text: "APP VERSION"
-    const fs = 10 * sc;
-    ctx.font = '700 ' + fs + 'px sans-serif';
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.textBaseline = 'middle';
-    const padX = 16 * sc;
-    const midY = py + ph / 2;
-    ctx.fillText('APP VERSION', px + padX, midY);
-
-    // Text: version number
-    const labelW = ctx.measureText('APP VERSION').width;
-    const gap = 8 * sc;
-    ctx.font = '800 ' + fs + 'px sans-serif';
-    ctx.fillStyle = '#000000';
-    const ver = state.appVersion || '2.5.0';
-    ctx.fillText(ver, px + padX + labelW + gap, midY);
-    const verW = ctx.measureText(ver).width;
-
-    // Load and draw store badge PNGs
-    const loadImg = src => new Promise(res => {
-      const img = new Image(); img.onload = () => res(img); img.src = src;
-    });
-    const [imgA, imgP] = await Promise.all([
-      loadImg(STORE_BADGES.appStore),
-      loadImg(STORE_BADGES.playStore)
-    ]);
-    const bs = 22 * sc;
-    const bx = px + padX + labelW + gap + verW + gap;
-    const by = py + (ph - bs) / 2;
-    ctx.drawImage(imgA, bx,      by, bs, bs);
-    ctx.drawImage(imgP, bx + bs + gap, by, bs, bs);
-  }
-
-  return canvas;
-}
-
-// ─── PDF Export (single page, canvas-based) ───
-async function downloadPDF() {
-  const btn = document.getElementById('pdf-btn');
-  const orig = btn.textContent;
-  btn.textContent = 'Generando PDF...'; btn.disabled = true;
-  try {
-    const canvas = await captureNewsletter(2);
-    const imgData = canvas.toDataURL('image/png');
-    // Page size in mm matching canvas proportions
-    const pxToMm = 0.264583;
-    const pageW = canvas.width * pxToMm / 2;  // divide by scale
-    const pageH = canvas.height * pxToMm / 2;
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: pageW > pageH ? 'l' : 'p', unit: 'mm', format: [pageW, pageH] });
-    doc.addImage(imgData, 'PNG', 0, 0, pageW, pageH);
-    const banner = document.querySelector('.nl-sep-name')?.textContent || 'news';
-    doc.save(`news-prisma-${banner.toLowerCase()}.pdf`);
-  } catch(e) { alert('Error al generar PDF: ' + e.message); }
-  btn.textContent = orig; btn.disabled = false;
 }
 
 // ─── PNG Export ───
