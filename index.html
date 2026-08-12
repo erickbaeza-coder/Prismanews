@@ -1030,12 +1030,13 @@ async function captureNewsletter(scale) {
   const pill = document.getElementById('prev-app-version');
   if (pill && state.formatId !== 'mailing') {
     const ctx = canvas.getContext('2d');
-    const elRect  = el.getBoundingClientRect();
-    const pRect   = pill.getBoundingClientRect();
-    const px = (pRect.left - elRect.left + el.scrollLeft) * sc;
-    const py = (pRect.top  - elRect.top  + el.scrollTop)  * sc;
-    const pw = pRect.width  * sc;
-    const ph = pRect.height * sc;
+    // Use offsetTop chain to get position relative to newsletter — avoids viewport scroll errors
+    let ox = 0, oy = 0, cur = pill;
+    while (cur && cur !== el) { ox += cur.offsetLeft; oy += cur.offsetTop; cur = cur.offsetParent; }
+    const px = ox * sc;
+    const py = oy * sc;
+    const pw = pill.offsetWidth  * sc;
+    const ph = pill.offsetHeight * sc;
 
     // Clear pill interior (keep border — just repaint the fill)
     ctx.fillStyle = '#ffffff';
