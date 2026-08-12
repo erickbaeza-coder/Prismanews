@@ -1006,11 +1006,13 @@ function renderPreview() {
 
 // ─── Shared canvas capture ───
 async function captureNewsletter(scale) {
+  const sc = scale || 2;
   const el = document.getElementById('newsletter');
   const fullHeight = el.scrollHeight || el.offsetHeight;
   const fullWidth  = el.scrollWidth  || el.offsetWidth;
-  return html2canvas(el, {
-    scale: scale || 2,
+
+  const canvas = await html2canvas(el, {
+    scale: sc,
     useCORS: true,
     allowTaint: true,
     logging: false,
@@ -1021,19 +1023,59 @@ async function captureNewsletter(scale) {
     windowHeight: fullHeight,
     scrollX: 0,
     scrollY: -window.scrollY,
-    onclone: function(clonedDoc) {
-      // Rebuild pill entirely in clone — dynamically inserted elements lose content in html2canvas
-      const pill = clonedDoc.getElementById('prev-app-version');
-      if (pill && pill.style.display !== 'none') {
-        const ver = state.appVersion || '2.5.0';
-        pill.innerHTML =
-          '<span class="av-label" style="opacity:.6;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">APP VERSION</span>' +
-          '<span class="av-ver" style="font-size:10px;font-weight:800;letter-spacing:.1em">' + ver + '</span>' +
-          '<img src="' + STORE_BADGES.appStore + '" width="22" height="22" style="display:inline-block;vertical-align:middle">' +
-          '<img src="' + STORE_BADGES.playStore + '" width="22" height="22" style="display:inline-block;vertical-align:middle">';
-      }
-    }
   });
+
+  // Post-process: draw APP VERSION pill content directly on canvas
+  // (html2canvas captures the pill border/bg but not dynamic children)
+  const pill = document.getElementById('prev-app-version');
+  if (pill && state.formatId !== 'mailing') {
+    const ctx = canvas.getContext('2d');
+    const elRect  = el.getBoundingClientRect();
+    const pRect   = pill.getBoundingClientRect();
+    const px = (pRect.left - elRect.left + el.scrollLeft) * sc;
+    const py = (pRect.top  - elRect.top  + el.scrollTop)  * sc;
+    const pw = pRect.width  * sc;
+    const ph = pRect.height * sc;
+
+    // Clear pill interior (keep border — just repaint the fill)
+    ctx.fillStyle = '#ffffff';
+    const border = 1.5 * sc;
+    ctx.fillRect(px + border, py + border, pw - border*2, ph - border*2);
+
+    // Text: "APP VERSION"
+    const fs = 10 * sc;
+    ctx.font = '700 ' + fs + 'px sans-serif';
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.textBaseline = 'middle';
+    const padX = 16 * sc;
+    const midY = py + ph / 2;
+    ctx.fillText('APP VERSION', px + padX, midY);
+
+    // Text: version number
+    const labelW = ctx.measureText('APP VERSION').width;
+    const gap = 8 * sc;
+    ctx.font = '800 ' + fs + 'px sans-serif';
+    ctx.fillStyle = '#000000';
+    const ver = state.appVersion || '2.5.0';
+    ctx.fillText(ver, px + padX + labelW + gap, midY);
+    const verW = ctx.measureText(ver).width;
+
+    // Load and draw store badge PNGs
+    const loadImg = src => new Promise(res => {
+      const img = new Image(); img.onload = () => res(img); img.src = src;
+    });
+    const [imgA, imgP] = await Promise.all([
+      loadImg(STORE_BADGES.appStore),
+      loadImg(STORE_BADGES.playStore)
+    ]);
+    const bs = 22 * sc;
+    const bx = px + padX + labelW + gap + verW + gap;
+    const by = py + (ph - bs) / 2;
+    ctx.drawImage(imgA, bx,      by, bs, bs);
+    ctx.drawImage(imgP, bx + bs + gap, by, bs, bs);
+  }
+
+  return canvas;
 }
 
 // ─── PDF Export (single page, canvas-based) ───
