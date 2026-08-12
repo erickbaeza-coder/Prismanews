@@ -1021,6 +1021,26 @@ async function captureNewsletter(scale) {
   });
 }
 
+// ─── PDF Export ───
+async function downloadPDF() {
+  const btn = document.getElementById('pdf-btn');
+  const orig = btn.textContent;
+  btn.textContent = 'Generando PDF...'; btn.disabled = true;
+  try {
+    const canvas = await captureNewsletter(2);
+    const imgData = canvas.toDataURL('image/png');
+    const pxToMm = 0.264583;
+    const pageW = canvas.width * pxToMm / 2;
+    const pageH = canvas.height * pxToMm / 2;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: pageW > pageH ? 'l' : 'p', unit: 'mm', format: [pageW, pageH] });
+    doc.addImage(imgData, 'PNG', 0, 0, pageW, pageH);
+    const banner = document.querySelector('.nl-sep-name')?.textContent || 'news';
+    doc.save('news-prisma-' + banner.toLowerCase() + '.pdf');
+  } catch(e) { alert('Error al generar PDF: ' + e.message); }
+  btn.textContent = orig; btn.disabled = false;
+}
+
 // ─── PNG Export ───
 async function downloadPNG() {
   const btn = document.getElementById('png-btn');
