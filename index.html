@@ -1022,11 +1022,15 @@ async function captureNewsletter(scale) {
     scrollX: 0,
     scrollY: -window.scrollY,
     onclone: function(clonedDoc) {
-      // html2canvas cannot render inline SVG — replace store badge SVGs with PNG imgs
-      const badges = clonedDoc.querySelectorAll('.av-store-badge');
-      if (badges.length >= 2) {
-        badges[0].innerHTML = '<img src="' + STORE_BADGES.appStore + '" width="22" height="22" style="display:block">';
-        badges[1].innerHTML = '<img src="' + STORE_BADGES.playStore + '" width="22" height="22" style="display:block">';
+      // Rebuild pill entirely in clone — dynamically inserted elements lose content in html2canvas
+      const pill = clonedDoc.getElementById('prev-app-version');
+      if (pill && pill.style.display !== 'none') {
+        const ver = state.appVersion || '2.5.0';
+        pill.innerHTML =
+          '<span class="av-label" style="opacity:.6;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">APP VERSION</span>' +
+          '<span class="av-ver" style="font-size:10px;font-weight:800;letter-spacing:.1em">' + ver + '</span>' +
+          '<img src="' + STORE_BADGES.appStore + '" width="22" height="22" style="display:inline-block;vertical-align:middle">' +
+          '<img src="' + STORE_BADGES.playStore + '" width="22" height="22" style="display:inline-block;vertical-align:middle">';
       }
     }
   });
