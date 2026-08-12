@@ -1021,7 +1021,14 @@ async function captureNewsletter(scale) {
     windowHeight: fullHeight,
     scrollX: 0,
     scrollY: -window.scrollY,
-
+    onclone: function(clonedDoc) {
+      // html2canvas cannot render inline SVG — replace store badge SVGs with PNG imgs
+      const badges = clonedDoc.querySelectorAll('.av-store-badge');
+      if (badges.length >= 2) {
+        badges[0].innerHTML = '<img src="' + STORE_BADGES.appStore + '" width="22" height="22" style="display:block">';
+        badges[1].innerHTML = '<img src="' + STORE_BADGES.playStore + '" width="22" height="22" style="display:block">';
+      }
+    }
   });
 }
 
